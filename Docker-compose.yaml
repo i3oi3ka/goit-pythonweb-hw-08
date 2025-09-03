@@ -1,6 +1,7 @@
 services:
   database:
     image: postgres
+    container_name: postgres_hw6
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -14,7 +15,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     restart: always
-    container_name: pgadmin_fastapi_ex
+    container_name: pgadmin_hw6
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}

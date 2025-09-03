@@ -1,42 +1,56 @@
-from datetime import datetime
+"""
+models
+"""
 
-from sqlalchemy import Column, Integer, String, Boolean, func, Table
-from sqlalchemy.orm import relationship, mapped_column, Mapped, DeclarativeBase
-from sqlalchemy.sql.schema import ForeignKey, PrimaryKeyConstraint
-from sqlalchemy.sql.sqltypes import DateTime
+from datetime import datetime, date
+from email_validator import validate_email, EmailNotValidError
+
+from sqlalchemy import Integer, String, func
+from sqlalchemy.orm import (
+    mapped_column,
+    Mapped,
+    DeclarativeBase,
+    validates,
+)
+from sqlalchemy.sql.sqltypes import DateTime, Date
+
+import re
 
 
 class Base(DeclarativeBase):
     pass
 
 
-note_m2m_tag = Table(
-    "note_m2m_tag",
-    Base.metadata,
-    Column("note_id", Integer, ForeignKey("notes.id", ondelete="CASCADE")),
-    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE")),
-    PrimaryKeyConstraint("note_id", "tag_id"),
-)
+class Contact(Base):
+    __tablename__ = "contacts"
 
-
-class Note(Base):
-    __tablename__ = "notes"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String(50), nullable=False)
+    first_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    last_name: Mapped[str] = mapped_column(String(50), nullable=False)
+    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    phone_number: Mapped[str] = mapped_column(String(15), unique=True, nullable=False)
+    birthday: Mapped[date] = mapped_column(Date)
+    description: Mapped[str] = mapped_column(String(150), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime, default=func.now()
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        "updated_at", DateTime, default=func.now(), onupdate=func.now()
-    )
-    description: Mapped[str] = mapped_column(String(150), nullable=False)
-    done: Mapped[bool] = mapped_column(Boolean, default=False)
-    tags: Mapped[list["Tag"]] = relationship(
-        "Tag", secondary=note_m2m_tag, backref="notes"
-    )
 
+    @validates("email")
+    def validate_email_with_library(self, key, address):
+        try:
+            validate_email(address)
+        except EmailNotValidError as e:
+            raise ValueError(f"Invalid email: {e}")
+        return address
 
-class Tag(Base):
-    __tablename__ = "tags"
-    id: Mapped[int] = Column(Integer, primary_key=True)
-    name: Mapped[str] = Column(String(25), nullable=False, unique=True)
+    @validates("phone_number")
+    def validate_phone_number(self, key, value):
+        if not re.match(r"^\+?\d{10,15}$", value):
+            raise ValueError("Invalid phone number format.")
+        return value
+
+    def __repr__(self):
+        return f"<Contact(id={self.id}, name={self.first_name} {self.last_name}, email={self.email})>"
+
+    def __str__(self):
+        return f"Contact(id={self.id}, name={self.first_name} {self.last_name}, email={self.email})"

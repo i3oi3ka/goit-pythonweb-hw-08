@@ -4,11 +4,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.database.models import Note, Tag
-from src.schemas import NoteModel, NoteUpdate, NoteStatusUpdate
+from src.database.models import Contact
+from schemas.contacts import ContactResponse, ContactModel
 
 
-class NoteRepository:
+class ContactRepository:
     def __init__(self, session: AsyncSession):
         self.db = session
 

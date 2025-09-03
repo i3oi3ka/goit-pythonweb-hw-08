@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from repository.contacts import NoteRepository
 from src.repository.tags import TagRepository
-from src.schemas import NoteModel, NoteUpdate, NoteStatusUpdate
+from schemas.contacts import NoteModel, NoteUpdate, NoteStatusUpdate
 
 
 class NoteService:
