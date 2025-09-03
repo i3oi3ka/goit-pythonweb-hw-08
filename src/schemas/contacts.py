@@ -15,8 +15,3 @@ class ContactResponse(ContactModel):
     id: int
     model_config = ConfigDict(from_attributes=True)
     created_at: datetime
-
-
-# class ContactRequest(BaseModel):
-#     title: str = Field(max_length=50)
-#     description: str = Field(max_length=150)

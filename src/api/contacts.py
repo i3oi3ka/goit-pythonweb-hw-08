@@ -1,6 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Depends, status
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
@@ -11,21 +12,36 @@ router = APIRouter(prefix="/contacts")
 
 
 @router.get("/", response_model=List[ContactResponse])
-async def read_notes(
-    skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)
+async def read_contacts(
+    first_name: str | None = None,
+    last_name: str | None = None,
+    email: EmailStr | None = None,
+    phone_number: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
 ):
     contact_service = ContactService(db)
-    contacts = await contact_service.get_contacts(skip, limit)
+    params = {}
+    if first_name:
+        params["first_name"] = first_name
+    if last_name:
+        params["last_name"] = last_name
+    if email:
+        params["email"] = email
+    if phone_number:
+        params["phone_number"] = phone_number
+    contacts = await contact_service.get_contacts(skip, limit, params)
     return contacts
 
 
 @router.get("/{contact_id}", response_model=ContactResponse)
 async def read_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
     contact_service = ContactService(db)
-    contact = await contact_service.get_note(contact_id)
+    contact = await contact_service.get_contact(contact_id)
     if contact is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
         )
     return contact
 
@@ -41,10 +57,10 @@ async def update_contact(
     body: ContactModel, contact_id: int, db: AsyncSession = Depends(get_db)
 ):
     contact_service = ContactService(db)
-    contact = await contact_service.update_note(contact_id, body)
-    if note is None:
+    contact = await contact_service.update_contact(contact_id, body)
+    if contact is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
         )
     return contact
 
@@ -55,6 +71,12 @@ async def remove_contact(contact_id: int, db: AsyncSession = Depends(get_db)):
     contact = await note_service.remove_contact(contact_id)
     if contact is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
         )
     return contact
+
+
+@router.get("/upcoming_birthdays/", response_model=List[ContactResponse])
+async def coming_birthday_contacts(db: AsyncSession = Depends(get_db)):
+    contact_service = ContactService(db)
+    return await contact_service.get_contacts_with_upcoming_birthdays()

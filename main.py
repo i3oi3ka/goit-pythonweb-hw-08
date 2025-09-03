@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from src.api import tags, utils, notes
+from src.api import contacts, utils
 
 app = FastAPI()
 
